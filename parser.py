@@ -25,6 +25,7 @@ def clean_body(text: str) -> str:
 
 def parse_transaction(body: str, date_obj: datetime) -> dict:
     text = clean_body(body)
+
     m = AMOUNT_RE.search(text)
     amount = m.group(1).replace(",", "") if m else "0.0"
 

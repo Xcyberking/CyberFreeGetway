@@ -1,0 +1,74 @@
+{% extends "admin/base_admin.html" %}
+{% block content %}
+<h1>Users</h1>
+<div class="lookup-row" style="margin-top:16px;margin-bottom:16px">
+  <input id="q" placeholder="Search by email…" style="padding:10px;border-radius:8px;
+         border:1px solid #2d2d3d;background:#0a0a0f;color:#fff;flex:1">
+  <button class="btn btn-primary" onclick="load()">Search</button>
+</div>
+<div class="card" id="list"></div>
+
+<style>
+.u-row { display:grid; grid-template-columns:1fr 100px 120px 120px 200px;
+         gap:12px; padding:12px 0; border-bottom:1px solid #1f1f2e; align-items:center; }
+.u-row:last-child { border-bottom:none; }
+.btn-sm { padding:6px 10px; font-size:12px; border-radius:6px; border:none;
+          cursor:pointer; margin-right:4px; }
+.btn-blue { background:#1e40af; color:#fff; }
+.btn-red  { background:#7f1d1d; color:#fff; }
+.btn-gray { background:#27272a; color:#e4e4e7; }
+</style>
+
+{% endblock %}
+{% block scripts %}
+<script>
+let page = 1;
+async function load() {
+  const q = document.getElementById('q').value.trim();
+  const r = await api(`/api/admin/users?page=${page}&limit=25&q=${encodeURIComponent(q)}`);
+  const d = await r.json();
+  const el = document.getElementById('list');
+  if (!d.items.length) { el.innerHTML = '<p class="muted">No users.</p>'; return; }
+  el.innerHTML = d.items.map(u => `
+    <div class="u-row">
+      <div><b>${u.email}</b><br><span class="muted">${u.full_name||'—'} • ID ${u.id}</span></div>
+      <div>${u.plan}</div>
+      <div>${u.queries_used}/${u.queries_limit}</div>
+      <div>${u.is_banned ? '🚫 banned' : (u.is_active ? '✅ active' : '⚠️ expired')}</div>
+      <div>
+        <button class="btn-sm btn-blue" onclick="setPlan(${u.id})">Set Plan</button>
+        <button class="btn-sm btn-gray" onclick="resetQ(${u.id})">Reset Q</button>
+        <button class="btn-sm btn-red" onclick="ban(${u.id})">${u.is_banned?'Unban':'Ban'}</button>
+      </div>
+    </div>
+  `).join('');
+  el.insertAdjacentHTML('beforeend', `
+    <div style="padding:16px 0;text-align:center">
+      <button class="btn btn-ghost" onclick="prev()">← Prev</button>
+      <span class="muted" style="margin:0 12px">Page ${d.page} / ${Math.max(1,Math.ceil(d.total/d.limit))}</span>
+      <button class="btn btn-ghost" onclick="next()">Next →</button>
+    </div>
+  `);
+}
+async function setPlan(uid) {
+  const plan = prompt('Plan? (free/starter/pro/business)', 'pro');
+  if (!plan) return;
+  const r = await api(`/api/admin/users/${uid}/plan`, {
+    method:'POST', body: JSON.stringify({ plan })
+  });
+  alert((await r.json()).ok ? 'Updated' : 'Failed');
+  load();
+}
+async function ban(uid) {
+  await api(`/api/admin/users/${uid}/ban`, { method:'POST' });
+  load();
+}
+async function resetQ(uid) {
+  await api(`/api/admin/users/${uid}/quota`, { method:'POST' });
+  load();
+}
+function prev() { if (page > 1) { page--; load(); } }
+function next() { page++; load(); }
+load();
+</script>
+{% endblock %}

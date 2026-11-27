@@ -6,11 +6,9 @@
   <a href="/" class="logo">💸 Famnify</a>
   <div class="nav-links"><a href="/dashboard">Dashboard</a></div>
 </nav>
-
 <main class="dash">
   <h1>Choose your plan</h1>
   <p class="muted">Pay directly via UPI — no gateway fees, verified from email.</p>
-
   <div class="plans">
     {% for key, p in plans.items() %}
     <div class="plan-card">
@@ -29,10 +27,5 @@
     </div>
     {% endfor %}
   </div>
-
-  <p class="muted" style="margin-top:24px">
-    UPI payments are verified automatically by scanning your UTR against the
-    Famnify inbox — usually within seconds.
-  </p>
 </main>
 </body></html>

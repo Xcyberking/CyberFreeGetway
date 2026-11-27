@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Dashboard — Famnify</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
+<body class="app-body">
+<nav class="nav">
+  <a href="/" class="logo">💸 Famnify</a>
+  <div class="nav-links">
+    <span id="userEmail" class="muted"></span>
+    <a href="/pricing">Upgrade</a>
+    <a href="#" onclick="logout()">Logout</a>
+  </div>
+</nav>
+
+<main class="dash">
+  <section class="dash-hero">
+    <h1>Dashboard</h1>
+    <p class="muted" id="planBadge"></p>
+  </section>
+
+  <section class="card">
+    <h3>🔍 Lookup Transaction</h3>
+    <div class="lookup-row">
+      <input id="query" placeholder="Enter UTR or Transaction ID" />
+      <button class="btn btn-primary" onclick="lookup()">Search</button>
+    </div>
+    <div id="result" class="result-box"></div>
+  </section>
+
+  <section class="card">
+    <h3>📜 History</h3>
+    <div id="historyList" class="history"></div>
+  </section>
+</main>
+
+<script>
+const token = localStorage.getItem('token');
+if (!token) location.href = '/login';
+async function api(path, opts={}) {
+  opts.headers = { ...(opts.headers||{}), 'Authorization': 'Bearer ' + token,
+                   'Content-Type': 'application/json' };
+  const r = await fetch(path, opts);
+  if (r.status === 401) { localStorage.clear(); location.href='/login'; }
+  return r;
+}
+async function loadMe() {
+  const r = await api('/api/auth/me');
+  const d = await r.json();
+  const u = d.user;
+  document.getElementById('userEmail').textContent = u.email;
+  const active = u.is_active ? '✅ Active' : '⚠️ Expired';
+  document.getElementById('planBadge').textContent =
+    `${active} • Plan: ${u.plan} • Queries: ${u.queries_used}/${u.queries_limit}`;
+}
+async function lookup() {
+  const q = document.getElementById('query').value.trim();
+  if (q.length < 4) return;
+  const box = document.getElementById('result');
+  box.innerHTML = '<p class="muted">Searching…</p>';
+  const r = await api('/api/fampay?id=' + encodeURIComponent(q));
+  const d = await r.json();
+  if (!r.ok) {
+    box.innerHTML = `<p class="err">${d.error}</p>` +
+      (d.upgrade ? '<a class="btn btn-primary" href="/pricing">Upgrade</a>' : '');
+    return;
+  }
+  if (!d.found) { box.innerHTML = '<p class="muted">No transaction found.</p>'; return; }
+  box.innerHTML = d.results.map(t => `
+    <div class="txn">
+      <div><b>₹${t.money}</b> ${t.payment === 'Success' ? '✅' : '❌'}</div>
+      <div>👤 ${t.name}</div>
+      <div class="muted">${t.date}</div>
+      <div class="muted">UTR: ${t.utr || '—'} • Txn: ${t.txn_id || '—'}</div>
+    </div>
+  `).join('');
+  loadHistory();
+}
+async function loadHistory() {
+  const r = await api('/api/transactions?limit=20');
+  const d = await r.json();
+  if (!d.items || !d.items.length) {
+    document.getElementById('historyList').innerHTML = '<p class="muted">No history yet.</p>';
+    return;
+  }
+  document.getElementById('historyList').innerHTML = d.items.map(t => `
+    <div class="txn-row">
+      <span>₹${t.amount}</span>
+      <span>${t.sender || '—'}</span>
+      <span class="badge ${t.status==='Success'?'ok':'fail'}">${t.status}</span>
+      <span class="muted">${new Date(t.created_at).toLocaleString()}</span>
+    </div>
+  `).join('');
+}
+function logout() { localStorage.clear(); location.href = '/'; }
+loadMe(); loadHistory();
+</script>
+</body></html>

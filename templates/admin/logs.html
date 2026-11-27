@@ -1,0 +1,24 @@
+{% extends "admin/base_admin.html" %}
+{% block content %}
+<h1>Admin Logs</h1>
+<div class="card" id="list" style="margin-top:20px"></div>
+<style>
+.l-row { padding:10px 0; border-bottom:1px solid #1f1f2e; font-size:14px; }
+</style>
+{% endblock %}
+{% block scripts %}
+<script>
+(async () => {
+  const r = await api('/api/admin/logs?limit=100');
+  const d = await r.json();
+  const el = document.getElementById('list');
+  if (!d.items.length) { el.innerHTML = '<p class="muted">No logs.</p>'; return; }
+  el.innerHTML = d.items.map(l => `
+    <div class="l-row">
+      <b>${l.action}</b> — ${l.target} <span class="muted">(${new Date(l.created_at).toLocaleString()})</span>
+      ${l.detail ? `<br><span class="muted">${l.detail}</span>` : ''}
+    </div>
+  `).join('');
+})();
+</script>
+{% endblock %}

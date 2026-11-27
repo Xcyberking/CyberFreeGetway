@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Admin — Famnify</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
+<body class="app-body">
+<nav class="nav">
+  <a href="/admin" class="logo">🛡️ Famnify Admin</a>
+  <div class="nav-links">
+    <a href="/admin/dashboard">Overview</a>
+    <a href="/admin/users">Users</a>
+    <a href="/admin/payments">Payments</a>
+    <a href="/admin/transactions">Transactions</a>
+    <a href="/admin/logs">Logs</a>
+    <a href="#" onclick="logout()">Logout</a>
+  </div>
+</nav>
+<main class="dash">{% block content %}{% endblock %}</main>
+<script>
+const token = localStorage.getItem('token');
+if (!token) location.href = '/login';
+async function api(path, opts={}) {
+  opts.headers = {...(opts.headers||{}), 'Authorization':'Bearer '+token,
+                  'Content-Type':'application/json'};
+  const r = await fetch(path, opts);
+  if (r.status === 401 || r.status === 403) { localStorage.clear(); location.href='/login'; }
+  return r;
+}
+function logout() { localStorage.clear(); location.href='/'; }
+</script>
+{% block scripts %}{% endblock %}
+</body></html>

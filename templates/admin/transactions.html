@@ -1,0 +1,40 @@
+{% extends "admin/base_admin.html" %}
+{% block content %}
+<h1>Transactions</h1>
+<div class="lookup-row" style="margin:16px 0">
+  <input id="q" placeholder="Search UTR / Txn / sender…"
+         style="padding:10px;border-radius:8px;border:1px solid #2d2d3d;
+                background:#0a0a0f;color:#fff;flex:1">
+  <button class="btn btn-primary" onclick="load()">Search</button>
+</div>
+<div class="card" id="list"></div>
+
+<style>
+.t-row { display:grid; grid-template-columns:70px 1fr 80px 80px 110px 110px;
+         gap:12px; padding:10px 0; border-bottom:1px solid #1f1f2e; align-items:center; font-size:14px; }
+</style>
+
+{% endblock %}
+{% block scripts %}
+<script>
+let page = 1;
+async function load() {
+  const q = document.getElementById('q').value.trim();
+  const r = await api(`/api/admin/transactions?page=${page}&limit=30&q=${encodeURIComponent(q)}`);
+  const d = await r.json();
+  const el = document.getElementById('list');
+  if (!d.items.length) { el.innerHTML = '<p class="muted">No transactions.</p>'; return; }
+  el.innerHTML = d.items.map(t => `
+    <div class="t-row">
+      <div>#${t.id}</div>
+      <div><b>${t.sender || '—'}</b><br><span class="muted">${t.raw_snippet ? t.raw_snippet.slice(0,60) + '…' : ''}</span></div>
+      <div>₹${t.amount}</div>
+      <div>${t.status}</div>
+      <div class="muted">${t.utr || t.txn_id || '—'}</div>
+      <div class="muted">${new Date(t.created_at).toLocaleDateString()}</div>
+    </div>
+  `).join('');
+}
+load();
+</script>
+{% endblock %}

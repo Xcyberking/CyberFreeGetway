@@ -1,0 +1,50 @@
+{% extends "admin/base_admin.html" %}
+{% block content %}
+<h1>Admin Overview</h1>
+<div id="stats" class="stats-grid"></div>
+<div class="card" style="margin-top:24px">
+  <h3>💰 Revenue — Last 7 days</h3>
+  <div id="chart" class="chart-row"></div>
+</div>
+
+<style>
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-top:20px; }
+.stat { background:#13131c; border:1px solid #1f1f2e; border-radius:12px; padding:18px; }
+.stat .lbl { color:#71717a; font-size:13px; }
+.stat .val { font-size:26px; font-weight:800; color:#fff; }
+.chart-row { display:flex; align-items:flex-end; gap:12px; height:160px; padding-top:20px; }
+.chart-bar { flex:1; background:linear-gradient(180deg,#6366f1,#8b5cf6); border-radius:6px 6px 0 0; min-height:4px; position:relative; }
+.chart-bar .lbl { position:absolute; bottom:-24px; left:0; right:0; text-align:center; font-size:11px; color:#71717a; }
+</style>
+
+{% endblock %}
+{% block scripts %}
+<script>
+(async () => {
+  const r = await api('/api/admin/stats');
+  const d = await r.json();
+  const cards = [
+    ['Total Users', d.total_users],
+    ['Active', d.active_users],
+    ['New (30d)', d.new_users_30d],
+    ['Banned', d.banned_users],
+    ['Revenue', '₹' + d.total_revenue],
+    ['Revenue (30d)', '₹' + d.revenue_30d],
+    ['Payments', d.total_payments],
+    ['Pending', d.payments_pending],
+    ['Verified', d.payments_verified],
+    ['Rejected', d.payments_rejected],
+    ['Transactions', d.total_transactions],
+  ];
+  document.getElementById('stats').innerHTML = cards.map(([l,v]) =>
+    `<div class="stat"><div class="lbl">${l}</div><div class="val">${v}</div></div>`
+  ).join('');
+
+  const max = Math.max(1, ...d.revenue_chart.map(c => c.revenue));
+  document.getElementById('chart').innerHTML = d.revenue_chart.map(c =>
+    `<div class="chart-bar" style="height:${(c.revenue/max)*100}%"
+          title="₹${c.revenue}"><div class="lbl">${c.date}</div></div>`
+  ).join('');
+})();
+</script>
+{% endblock %}

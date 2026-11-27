@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Pricing — Famnify</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
+<body class="app-body">
+<nav class="nav">
+  <a href="/" class="logo">💸 Famnify</a>
+  <div class="nav-links"><a href="/dashboard">Dashboard</a></div>
+</nav>
+
+<main class="dash">
+  <h1>Choose your plan</h1>
+  <p class="muted">Pay directly via UPI — no gateway fees, verified from email.</p>
+
+  <div class="plans">
+    {% for key, p in plans.items() %}
+    <div class="plan-card">
+      <h3>{{ p.name }}</h3>
+      <div class="price">₹{{ p.price }}<span>/mo</span></div>
+      <ul>
+        <li>✅ {{ p.queries }} lookups</li>
+        <li>✅ {{ p.days }} days validity</li>
+        <li>✅ API access</li>
+        <li>✅ Instant email verification</li>
+      </ul>
+      <button class="btn btn-primary btn-full"
+              onclick="location.href='/checkout?plan={{ key }}'">
+        Buy {{ p.name }} via UPI
+      </button>
+    </div>
+    {% endfor %}
+  </div>
+
+  <p class="muted" style="margin-top:24px">
+    UPI payments are verified automatically by scanning your UTR against the
+    Famnify inbox — usually within seconds.
+  </p>
+</main>
+</body></html>

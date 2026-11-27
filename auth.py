@@ -1,8 +1,6 @@
 from functools import wraps
 from flask import jsonify
-from flask_jwt_extended import (
-    create_access_token, jwt_required, get_jwt_identity
-)
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from models import User
 
 
@@ -22,5 +20,18 @@ def login_required(fn):
         user = current_user()
         if not user:
             return jsonify({"error": "user not found"}), 401
+        if user.is_banned:
+            return jsonify({"error": "account banned"}), 403
+        return fn(user, *a, **kw)
+    return wrapper
+
+
+def admin_required(fn):
+    @wraps(fn)
+    @jwt_required()
+    def wrapper(*a, **kw):
+        user = current_user()
+        if not user or not user.is_admin:
+            return jsonify({"error": "admin only"}), 403
         return fn(user, *a, **kw)
     return wrapper

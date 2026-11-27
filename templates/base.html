@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Famnify — FamPay Transaction Parser</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="logo">💸 Famnify</a>
+  <div class="nav-links">
+    <a href="/pricing">Pricing</a>
+    <a href="/login">Login</a>
+    <a href="/signup" class="btn btn-primary">Get Started</a>
+  </div>
+</nav>
+
+<main>
+  <section class="hero">
+    <h1>Turn FamPay Emails into <span class="grad">Structured Data</span></h1>
+    <p class="sub">Enter a UTR or Transaction ID — get amount, sender, status in seconds.
+       API + dashboard. Pay via UPI — verified from email.</p>
+    <div class="cta-row">
+      <a href="/signup" class="btn btn-primary btn-lg">Start Free →</a>
+      <a href="/pricing" class="btn btn-ghost btn-lg">View Pricing</a>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="card"><h3>⚡ Instant Lookup</h3><p>UTR / Txn ID se transaction parse karo milliseconds mein.</p></div>
+    <div class="card"><h3>🔒 Secure</h3><p>JWT auth, encrypted storage, email-verified payments.</p></div>
+    <div class="card"><h3>💳 UPI Payments</h3><p>No gateway. Direct UPI, verified automatically from Gmail.</p></div>
+    <div class="card"><h3>📊 Dashboard</h3><p>History, analytics, exports — sab ek jagah.</p></div>
+  </section>
+</main>
+
+<footer class="footer">© 2026 Famnify • Made in India 🇮🇳</footer>
+</body>
+</html>

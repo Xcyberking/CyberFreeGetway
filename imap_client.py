@@ -14,18 +14,23 @@ def extract_body(msg) -> str:
     if msg.is_multipart():
         for part in msg.walk():
             ctype = part.get_content_type()
-            if ctype not in ("text/plain", "text/html"): continue
+            if ctype not in ("text/plain", "text/html"):
+                continue
             try:
                 cs = part.get_content_charset() or "utf-8"
                 payload = part.get_payload(decode=True).decode(cs, errors="replace")
-                if ctype == "text/plain": plain += payload + " "
-                else: html += payload + " "
-            except Exception: continue
+                if ctype == "text/plain":
+                    plain += payload + " "
+                else:
+                    html += payload + " "
+            except Exception:
+                continue
     else:
         try:
             cs = msg.get_content_charset() or "utf-8"
             plain = msg.get_payload(decode=True).decode(cs, errors="replace")
-        except Exception: pass
+        except Exception:
+            pass
     return plain if plain.strip() else html
 
 
@@ -47,12 +52,16 @@ def search_gmail(query_id: str) -> dict:
         results = []
         for eid in reversed(ids):
             st, md = mail.fetch(eid, "(RFC822)")
-            if st != "OK" or not md: continue
+            if st != "OK" or not md:
+                continue
             msg = email.message_from_bytes(md[0][1])
-            try: dt = email.utils.parsedate_to_datetime(msg.get("Date",""))
-            except Exception: dt = datetime.now()
+            try:
+                dt = email.utils.parsedate_to_datetime(msg.get("Date", ""))
+            except Exception:
+                dt = datetime.now()
             results.append(parse_transaction(extract_body(msg), dt))
         return {"query": query_id, "found": bool(results), "results": results}
+
     except Exception as e:
         log.exception("imap fail")
         return {"error": str(e), "found": False}

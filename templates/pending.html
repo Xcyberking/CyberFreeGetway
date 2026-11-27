@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Pending — Famnify</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
+<body class="app-body">
+<nav class="nav">
+  <a href="/" class="logo">💸 Famnify</a>
+  <div class="nav-links"><a href="/dashboard">Dashboard</a></div>
+</nav>
+<main class="dash">
+  <h1>Pending Payments</h1>
+  <p class="muted">Payments waiting for email verification.</p>
+  <div class="card" id="list"></div>
+</main>
+<script>
+const token = localStorage.getItem('token');
+if (!token) location.href = '/login';
+(async () => {
+  const r = await fetch('/api/payments/pending', { headers:{'Authorization':'Bearer '+token} });
+  const d = await r.json();
+  const el = document.getElementById('list');
+  if (!d.items || !d.items.length) { el.innerHTML = '<p class="muted">No pending payments.</p>'; return; }
+  el.innerHTML = d.items.map(p => `
+    <div class="txn">
+      <div><b>₹${p.amount}</b> — ${p.plan} • <span class="badge">${p.status}</span></div>
+      <div class="muted">UTR: ${p.utr || '—'} • Note: ${p.note}</div>
+      <div class="muted">Created: ${new Date(p.created_at).toLocaleString()}</div>
+    </div>
+  `).join('');
+})();
+</script>
+</body></html>

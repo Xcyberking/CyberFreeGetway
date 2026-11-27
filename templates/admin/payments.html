@@ -1,0 +1,70 @@
+{% extends "admin/base_admin.html" %}
+{% block content %}
+<h1>Payments</h1>
+<div style="margin:16px 0">
+  <button class="btn btn-ghost" onclick="filter('')">All</button>
+  <button class="btn btn-ghost" onclick="filter('pending')">Pending</button>
+  <button class="btn btn-ghost" onclick="filter('verified')">Verified</button>
+  <button class="btn btn-ghost" onclick="filter('rejected')">Rejected</button>
+</div>
+<div class="card" id="list"></div>
+
+<style>
+.p-row { display:grid; grid-template-columns:70px 1fr 80px 90px 110px 180px;
+         gap:12px; padding:12px 0; border-bottom:1px solid #1f1f2e; align-items:center; }
+.badge { padding:3px 8px; border-radius:6px; font-size:12px; }
+.badge.pending  { background:#422006; color:#fde68a; }
+.badge.verified { background:#052e16; color:#86efac; }
+.badge.rejected { background:#450a0a; color:#fca5a5; }
+.btn-sm { padding:6px 10px; font-size:12px; border-radius:6px; border:none;
+          cursor:pointer; margin-right:4px; }
+.btn-green { background:#166534; color:#fff; }
+.btn-red   { background:#7f1d1d; color:#fff; }
+</style>
+
+{% endblock %}
+{% block scripts %}
+<script>
+let currentFilter = '';
+let page = 1;
+function filter(f) { currentFilter = f; page = 1; load(); }
+async function load() {
+  const qs = `page=${page}&limit=25` + (currentFilter ? `&status=${currentFilter}` : '');
+  const r = await api('/api/admin/payments?' + qs);
+  const d = await r.json();
+  const el = document.getElementById('list');
+  if (!d.items.length) { el.innerHTML = '<p class="muted">No payments.</p>'; return; }
+  el.innerHTML = d.items.map(p => `
+    <div class="p-row">
+      <div>#${p.id}</div>
+      <div>User ${p.user_id} • ${p.plan}</div>
+      <div>₹${p.amount}</div>
+      <div><span class="badge ${p.status}">${p.status}</span></div>
+      <div class="muted">UTR: ${p.utr || '—'}</div>
+      <div>
+        ${p.status !== 'verified'
+          ? `<button class="btn-sm btn-green" onclick="approve(${p.id})">Approve</button>`
+          : ''}
+        ${p.status !== 'rejected'
+          ? `<button class="btn-sm btn-red" onclick="reject(${p.id})">Reject</button>`
+          : ''}
+      </div>
+    </div>
+  `).join('');
+}
+async function approve(id) {
+  const r = await api(`/api/admin/payments/${id}/approve`, { method:'POST' });
+  alert((await r.json()).ok ? 'Approved' : 'Failed');
+  load();
+}
+async function reject(id) {
+  const reason = prompt('Reject reason?', 'invalid UTR');
+  if (!reason) return;
+  await api(`/api/admin/payments/${id}/reject`, {
+    method:'POST', body: JSON.stringify({ reason })
+  });
+  load();
+}
+load();
+</script>
+{% endblock %}
